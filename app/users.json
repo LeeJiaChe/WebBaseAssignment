@@ -16,5 +16,11 @@
         "email": "yh123@gmail.com",
         "password_hash": "$2y$10$V.RLUFKyGVfvmh70wisv0eh1dzBSfujHqezAWxpqgzmOBIxzLV5Xy",
         "created": 1763822143
+    },
+    {
+        "name": "Lee Jia Che",
+        "email": "jiache0331@gmail.com",
+        "password_hash": "$2y$10$ed5o2Jjno2nfPEUCMpOnAu.WZRoZkYJebFYW2sPNR8qm8QTZnhVM.",
+        "created": 1763990954
     }
 ]

@@ -15,6 +15,8 @@ include '_head.php';
 .contact-info {
     background: #f8f9fa;
     padding: 30px;
+    margin-left: 45px;
+    margin-bottom: 20px;
     border-radius: 8px;
 }
 
@@ -142,8 +144,8 @@ include '_head.php';
 }
 </style>
 
-<h1>Contact Us</h1>
-<p>Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+<h1 style="margin-left:45px">Contact Us</h1>
+<p style="margin-left:45px">Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
 
 <div class="contact-container">
     <!-- Contact Information -->

@@ -617,9 +617,9 @@ main h1 {
 
   width: 100%;
 
-  max-width: 100%; /* FIXED: Changed from 100vw */
+  max-width: 100%;
 
-  margin: 0 -50px; /* FIXED: Compensate for main padding */
+  margin: 0px;
 
   padding: 0;
 
@@ -970,7 +970,7 @@ select.form-input:invalid {
 footer {
   background: #f8f9fa;
 
-  padding: 20px 50px;
+  padding: 20px;
 
   text-align: center;
 
