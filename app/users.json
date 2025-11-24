@@ -1,0 +1,20 @@
+[
+    {
+        "name": "YihLoong",
+        "email": "yihloong6818@gmail.com",
+        "password_hash": "$2y$10$CcBSHJ8zc4S.Mnr5UyHK0usaG8pQq6tBguNRnSyVvrn.7.yw0HjRK",
+        "created": 1763819035
+    },
+    {
+        "name": "Jiache",
+        "email": "jiache123@gmail.com",
+        "password_hash": "$2y$10$EqgrhNNnRcTR9fETk8.d6.\/V9JkccmHaemuI4KZdRquysQ8s\/FrF6",
+        "created": 1763819594
+    },
+    {
+        "name": "Yunhong",
+        "email": "yh123@gmail.com",
+        "password_hash": "$2y$10$V.RLUFKyGVfvmh70wisv0eh1dzBSfujHqezAWxpqgzmOBIxzLV5Xy",
+        "created": 1763822143
+    }
+]
