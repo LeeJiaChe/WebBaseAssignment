@@ -1,5 +1,6 @@
 <?php
 require '_base.php';
+$_bodyClass = 'index-page';
 include '_head.php';
 ?>
 
@@ -58,6 +59,35 @@ include '_head.php';
 	setInterval(() => plusSlides(1), 5000);
 
 </script>
+
+<!-- Featured Products -->
+<?php
+// Load DB and product helpers and render featured products dynamically
+$pdo = require __DIR__ . '/lib/db.php';
+require_once __DIR__ . '/lib/products.php';
+$featured = get_featured_products($pdo, 6);
+?>
+<section class="featured-products" style="padding:40px 20px; max-width:1200px; margin:40px auto;">
+	<h2 style="font-size:1.6rem; margin-bottom:18px; text-align:center;">Featured Products</h2>
+	<div class="products-grid">
+		<?php foreach ($featured as $p): ?>
+			<?php $id = (int)$p['id']; ?>
+			<div class="product-card">
+				<img src="<?= htmlspecialchars($p['image_path'] ?? '/images/placeholder.png') ?>" alt="<?= htmlspecialchars($p['name']) ?>" />
+				<div class="product-info">
+					<div>
+						<div class="product-name"><?= htmlspecialchars($p['name']) ?></div>
+						<div class="product-subtitle"><?= htmlspecialchars($p['description'] ?? '') ?></div>
+					</div>
+					<div class="product-footer">
+						<a class="learn-link" href="product.php?id=<?= $id ?>">Learn more</a>
+						<a class="buy-btn" href="cart.php?product_id=<?= $id ?>">Buy now</a>
+					</div>
+				</div>
+			</div>
+		<?php endforeach; ?>
+	</div>
+</section>
 
 <?php
 include '_foot.php';

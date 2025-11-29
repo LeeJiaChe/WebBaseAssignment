@@ -1,22 +1,42 @@
 <?php
 require '_base.php';
 $_title = 'Contact Us - VisionX';
+$_bodyClass = 'transparent-header-page';
 include '_head.php';
 ?>
 
 <style>
+.contact-header {
+    background: linear-gradient(135deg, #333333 0%, #8c8c8c 100%);
+    color: white;
+    box-shadow: -8px 0 24px rgba(0, 0, 0, 0.25);
+    padding: 135px 0 50px 0;
+    margin: -20px -50px 30px -50px;
+    text-align: center;
+}
+
+.contact-header h1 {
+    margin: 0;
+    font-size: 2.5rem;
+}
+
+.contact-header p {
+    margin: 10px 0 0 0;
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
 .contact-container {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 40px;
     margin-top: 20px;
+    padding: 0 20px;
 }
 
 .contact-info {
     background: #f8f9fa;
     padding: 30px;
-    margin-left: 45px;
-    margin-bottom: 20px;
     border-radius: 8px;
 }
 
@@ -35,7 +55,7 @@ include '_head.php';
 
 .contact-item i {
     font-size: 24px;
-    color: #1a73e8;
+    color: #7a7a7aff;
     width: 30px;
 }
 
@@ -99,9 +119,9 @@ include '_head.php';
 }
 
 .submit-btn {
-    background: #1a73e8;
+    background: #797979ff;
     color: white;
-    padding: 12px 30px;
+    padding: 12px 20px;
     border: none;
     border-radius: 4px;
     font-size: 16px;
@@ -126,15 +146,17 @@ include '_head.php';
     justify-content: center;
     width: 40px;
     height: 40px;
-    background: #1a73e8;
-    color: white;
+    background: #ffffffff;
+    color: black;
     border-radius: 50%;
     text-decoration: none;
     transition: background 0.3s;
 }
 
 .social-links a:hover {
-    background: #1666c1;
+    background: #f1f1f1;
+
+    color: #000;
 }
 
 @media (max-width: 768px) {
@@ -144,8 +166,10 @@ include '_head.php';
 }
 </style>
 
-<h1 style="margin-left:45px">Contact Us</h1>
-<p style="margin-left:45px">Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+<div class="contact-header">
+    <h1>Contact Us</h1>
+    <p>Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+</div>
 
 <div class="contact-container">
     <!-- Contact Information -->

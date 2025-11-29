@@ -49,6 +49,22 @@ $_title = 'Login';
 require __DIR__ . '/_head.php';
 ?>
 
+<style>
+/* Page-specific header override: make header visible on light backgrounds */
+header.main-header {
+    background: #ffffff !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    color: #000;
+}
+header.main-header nav a { color: #000 !important; }
+header.main-header nav a:hover { background: #eeeeee !important; }
+header.main-header .icon-button,
+header.main-header .cart-button { color: #222 !important; }
+header.main-header .logo-img { filter: none !important; }
+/* Remove white frame around auth content */
+main { padding: 0 !important; background: #f5f6f7; }
+</style>
+
 <section class="content auth-page">
     <div class="auth-box">
         <h1>Login</h1>

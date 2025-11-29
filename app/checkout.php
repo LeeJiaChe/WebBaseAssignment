@@ -5,6 +5,20 @@ $_title = 'Checkout';
 include '_head.php';
 ?>
 
+<style>
+/* Page-specific header override: make header visible on light backgrounds */
+header.main-header {
+	background: #ffffff !important;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+	color: #000;
+}
+header.main-header nav a { color: #000 !important; }
+header.main-header nav a:hover { background: #eeeeee !important; }
+header.main-header .icon-button,
+header.main-header .cart-button { color: #222 !important; }
+header.main-header .logo-img { filter: none !important; }
+</style>
+
 <section class="content">
     <div class="checkout-container">
         <div class="checkout-form">

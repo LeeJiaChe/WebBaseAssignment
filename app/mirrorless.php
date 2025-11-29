@@ -1,6 +1,7 @@
 <?php
 require '_base.php';
 $_title = 'Mirrorless Cameras - VisionX';
+$_bodyClass = 'transparent-header-page';
 include '_head.php';
 
 // Sample products - you can modify this based on your actual products
@@ -16,9 +17,9 @@ $products = [
 
 <style>
 .category-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #333333 0%, #8c8c8c 100%);
     color: white;
-    padding: 40px 0;
+    padding: 135px 0 50px 0;
     margin: -20px -50px 30px -50px;
     text-align: center;
 }

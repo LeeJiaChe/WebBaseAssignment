@@ -22,7 +22,9 @@
 
 </head>
 
-<body>
+
+
+<body<?= isset($_bodyClass) ? ' class="'.$_bodyClass.'"' : '' ?>>
 
     <header class="main-header">
 
@@ -36,6 +38,8 @@
 
         </div>
 
+
+
         <nav class="header-nav">
 
             <div class="dropdown">
@@ -44,15 +48,15 @@
 
                 <div class="dropdown-menu">
 
-                        <a href="canon.php">Canon</a>
+                    <a href="canon.php">Canon</a>
 
-                        <a href="fujifilm.php">FUJIFILM</a>
+                    <a href="fujifilm.php">FUJIFILM</a>
 
-                        <a href="dji.php">DJI</a>
+                    <a href="dji.php">DJI</a>
 
-                        <a href="sony.php">Sony</a>
+                    <a href="sony.php">Sony</a>
 
-                        <a href="insta360.php">Insta360</a>
+                    <a href="insta360.php">Insta360</a>
 
                 </div>
 
@@ -72,7 +76,7 @@
 
                     <a href="action.php">Action Cameras</a>
 
-                    <a href="drones.php">Drones</a>
+                    <a href="drone.php">Drones</a>
 
                     <a href="accessories.php">Camera Accessories</a>
 
@@ -85,6 +89,8 @@
             <a href="contact.php">Contact</a>
 
         </nav>
+
+
 
         <a href="cart.php" class="cart-button" title="Cart">
 
