@@ -35,7 +35,7 @@ include '_head.php';
 }
 
 .contact-info {
-    background: #f8f9fa;
+    background: #e5e5e5;
     padding: 30px;
     border-radius: 8px;
 }
@@ -131,7 +131,7 @@ include '_head.php';
 }
 
 .submit-btn:hover {
-    background: #1666c1;
+    background: #9e9d9d;
 }
 
 .social-links {

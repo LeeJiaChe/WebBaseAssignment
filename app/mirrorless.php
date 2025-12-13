@@ -6,12 +6,12 @@ include '_head.php';
 
 // Sample products - you can modify this based on your actual products
 $products = [
-    ['name' => 'Sony Alpha A7 IV', 'price' => 8999, 'image' => '/images/sony_product/sony_a7iv.jpg', 'brand' => 'Sony'],
-    ['name' => 'Canon EOS R6 Mark II', 'price' => 9999, 'image' => '/images/canon_product/canon_r6.jpg', 'brand' => 'Canon'],
-    ['name' => 'Fujifilm X-T5', 'price' => 6999, 'image' => '/images/fujifilm_product/fuji_xt5.jpg', 'brand' => 'Fujifilm'],
-    ['name' => 'Sony A6400', 'price' => 3999, 'image' => '/images/sony_product/sony_a6400.jpg', 'brand' => 'Sony'],
-    ['name' => 'Canon EOS R50', 'price' => 3499, 'image' => '/images/canon_product/canon_r50.jpg', 'brand' => 'Canon'],
-    ['name' => 'Fujifilm X-S20', 'price' => 4999, 'image' => '/images/fujifilm_product/fuji_xs20.jpg', 'brand' => 'Fujifilm'],
+    ['name' => 'Sony Alpha A7 IV', 'price' => 8999, 'image' => '/images/sony_product/sony_mirrorless1.jpg', 'brand' => 'Sony'],
+    ['name' => 'Canon EOS R6 Mark II', 'price' => 9999, 'image' => '/images/canon_product/canon_mirrorless1.png', 'brand' => 'Canon'],
+    ['name' => 'Fujifilm X-T30', 'price' => 6999, 'image' => '/images/fujifilm_product/fujifilm_mirrorless1.jpg', 'brand' => 'Fujifilm'],
+    ['name' => 'Sony A6400', 'price' => 3999, 'image' => '/images/sony_product/sony_mirrorless3.jpg', 'brand' => 'Sony'],
+    ['name' => 'Canon EOS R50', 'price' => 3499, 'image' => '/images/canon_product/canon_mirrorless2.png', 'brand' => 'Canon'],
+    ['name' => 'Fujifilm X-S20', 'price' => 4999, 'image' => '/images/fujifilm_product/fujifilm_mirrorless6.jpg', 'brand' => 'Fujifilm'],
 ];
 ?>
 

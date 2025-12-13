@@ -5,6 +5,6 @@ return [
     'host' => '127.0.0.1',
     'dbname' => 'webbased',
     'user' => 'root',
-    'pass' => '123',
+    'pass' => '',
     'charset' => 'utf8mb4',
 ];

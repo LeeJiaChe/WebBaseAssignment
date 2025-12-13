@@ -16,51 +16,21 @@ if (isset($_SESSION['user_email'])) {
 
 $errors = [];
 
-$name = $_POST['name'] ?? '';
-
-$email = $_POST['email'] ?? '';
+$message = '';
 
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
-    $name = trim($_POST['name'] ?? '');
-
     $email = trim($_POST['email'] ?? '');
 
-    $pass1 = $_POST['password'] ?? '';
 
-    $pass2 = $_POST['confirm_password'] ?? '';
-
-
-
-    if (empty($name)) {
-
-        $errors[] = 'Please enter your full name.';
-
-    }
 
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
 
         $errors[] = 'Please enter a valid email address.';
 
-    }
-
-    if (strlen($pass1) < 6) {
-
-        $errors[] = 'Password must be at least 6 characters.';
-
-    }
-
-    if ($pass1 !== $pass2) {
-
-        $errors[] = 'Passwords do not match.';
-
-    }
-
-
-
-    if (empty($errors)) {
+    } else {
 
         $usersFile = __DIR__ . '/users.json';
 
@@ -68,11 +38,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
 
-        foreach ($users as $u) {
+        $userFound = false;
+
+        $userIndex = null;
+
+
+
+        foreach ($users as $i => $u) {
 
             if (isset($u['email']) && strcasecmp($u['email'], $email) === 0) {
 
-                $errors[] = 'This email is already registered.';
+                $userFound = true;
+
+                $userIndex = $i;
 
                 break;
 
@@ -82,41 +60,29 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
 
-        if (empty($errors)) {
+        if ($userFound) {
 
-            $newUser = [
+            $token = bin2hex(random_bytes(32));
 
-                'id' => uniqid('user_'),
-
-                'name' => $name,
-
-                'email' => $email,
-
-                'password_hash' => password_hash($pass1, PASSWORD_DEFAULT),
-
-                'role' => 'member',
-
-                'photo' => '',
-
-                'created_at' => date('Y-m-d H:i:s')
-
-            ];
-
-            $users[] = $newUser;
+            $expiry = time() + (30 * 60);
 
 
 
-            if (file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT))) {
+            $users[$userIndex]['reset_token'] = $token;
 
-                header('Location: /login.php?registered=1&email=' . urlencode($email));
+            $users[$userIndex]['reset_expiry'] = $expiry;
 
-                exit;
+            file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT));
 
-            } else {
 
-                $errors[] = 'System error: Could not save user data.';
 
-            }
+            $resetLink = "http://" . $_SERVER['HTTP_HOST'] . "/reset_password.php?email=" . urlencode($email) . "&token=" . $token;
+
+            $message = "A reset link has been sent to your email. <br><small>(Demo link: <a href='$resetLink'>Click here to reset</a>)</small>";
+
+        } else {
+
+            $message = "If an account exists with that email, a reset link has been sent.";
 
         }
 
@@ -126,7 +92,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
 
-$_title = 'Sign Up - VisionX';
+$_title = 'Forgot Password - VisionX';
 
 require __DIR__ . '/_head.php';
 
@@ -196,13 +162,13 @@ require __DIR__ . '/_head.php';
 
 
 
-    main { padding: 0 !important; margin-top: 40px !important; background: #f0f2f5 !important; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
+    main { padding: 0 !important; margin-top: 0px !important; background: #f0f2f5 !important; min-height: 100vh; display: flex; justify-content: center; align-items: center; }
 
     .auth-container { width: 100%; max-width: 450px; padding: 20px; }
 
     .auth-box { background: #ffffff; border-radius: 12px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); overflow: hidden; }
 
-    .auth-header { background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%); padding: 25px 30px; text-align: center; color: white; }
+    .auth-header { background: linear-gradient(135deg, #1a1a1a 0%, #000000 100%); padding: 25px 30px; text-align: center; color: white; border-radius: 6px;}
 
     .auth-header h1 { margin: 0; font-size: 1.6rem; font-weight: 600; letter-spacing: 1px; }
 
@@ -221,6 +187,8 @@ require __DIR__ . '/_head.php';
     .btn-auth:hover { background: #000; transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,0,0,0.3); }
 
     .notice-box { padding: 12px; border-radius: 6px; margin-bottom: 20px; font-size: 0.95rem; }
+
+    .notice-success { background-color: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
 
     .notice-error { background-color: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
 
@@ -242,11 +210,27 @@ require __DIR__ . '/_head.php';
 
         <div class="auth-header">
 
-            <h1>CREATE ACCOUNT</h1>
+            <h1>RESET PASSWORD</h1>
 
         </div>
 
         <div class="auth-content">
+
+            <p style="color: #666; margin-bottom: 25px; text-align: center;">
+
+                Enter your email address and we'll send you a link to reset your password.
+
+            </p>
+
+
+
+            <?php if ($message): ?>
+
+                <div class="notice-box notice-success"><?= $message ?></div>
+
+            <?php endif; ?>
+
+            
 
             <?php if (!empty($errors)): ?>
 
@@ -264,51 +248,31 @@ require __DIR__ . '/_head.php';
 
 
 
+            <?php if (!$message): ?>
+
             <form method="post" action="" novalidate>
-
-                <div class="form-group">
-
-                    <label for="name" class="form-label">Full Name</label>
-
-                    <input id="name" name="name" type="text" required class="form-input" value="<?= htmlspecialchars($name) ?>" placeholder="John Doe">
-
-                </div>
 
                 <div class="form-group">
 
                     <label for="email" class="form-label">Email Address</label>
 
-                    <input id="email" name="email" type="email" required class="form-input" value="<?= htmlspecialchars($email) ?>" placeholder="name@example.com">
-
-                </div>
-
-                <div class="form-group">
-
-                    <label for="password" class="form-label">Password (Min 6 chars)</label>
-
-                    <input id="password" name="password" type="password" required class="form-input" minlength="6">
-
-                </div>
-
-                <div class="form-group">
-
-                    <label for="confirm_password" class="form-label">Confirm Password</label>
-
-                    <input id="confirm_password" name="confirm_password" type="password" required class="form-input">
+                    <input id="email" name="email" type="email" required class="form-input" placeholder="name@example.com">
 
                 </div>
 
                 
 
-                <button type="submit" class="btn-auth">SIGN UP</button>
+                <button type="submit" class="btn-auth">SEND RESET LINK</button>
 
             </form>
+
+            <?php endif; ?>
 
 
 
             <div class="auth-links">
 
-                Already have an account? <a href="login.php">Log In</a>
+                <a href="login.php">Back to Log In</a>
 
             </div>
 
