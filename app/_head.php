@@ -8,7 +8,10 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
 
 // load DB for user image lookup
 
-require_once __DIR__ . '/lib/db.php';
+global $db;
+if (!isset($db)) {
+    $db = require_once __DIR__ . '/lib/db.php';
+}
 
 ?>
 
@@ -106,8 +109,6 @@ require_once __DIR__ . '/lib/db.php';
 
                 <a href="/admin/products.php" style="margin-left:12px; font-weight:700; color:#2b7cff;">Admin Dashboard</a>
 
-                <a href="/index.php" style="margin-left:8px; color:#6b7280;">View site (User)</a>
-
             <?php endif; ?>
 
         </nav>
@@ -134,11 +135,11 @@ if ($isLoggedIn) {
 
     // try SQL first
 
-    if (isset($pdo) && !empty($_SESSION['user_email'])) {
+    if (isset($db) && !empty($_SESSION['user_email'])) {
 
         try {
 
-            $stmt = $pdo->prepare('SELECT photo FROM users WHERE email = :email LIMIT 1');
+            $stmt = $db->prepare('SELECT photo FROM users WHERE email = :email LIMIT 1');
 
             $stmt->execute([':email' => $_SESSION['user_email']]);
 
@@ -206,19 +207,25 @@ if ($isLoggedIn) {
 
                 <div class="icon-dropdown-menu" id="userIconMenu">
 
-                    <div class="dropdown-user-header">
+                  <div class="dropdown-user-header">
 
-                        <div style="font-size: 1.1em;"><?= htmlspecialchars($_SESSION['user_name'] ?? '') ?></div>
-
-                        </div>
-
-                    
-
-                    <a href="profile.php"><i class="fas fa-user" style="margin-right:8px; width:16px; text-align:center;"></i> Profile</a>
-
-                    <a href="user.php?action=logout"><i class="fas fa-sign-out-alt" style="margin-right:8px; width:16px; text-align:center;"></i> Log out</a>
+                    <div style="font-size: 1.1em;"><?= htmlspecialchars($_SESSION['user_name'] ?? '') ?></div>
 
                 </div>
+
+    
+
+                <a href="profile.php"><i class="fas fa-user" style="margin-right:8px; width:16px; text-align:center;"></i> Profile</a>
+
+    
+
+                <a href="orders.php"><i class="fas fa-history" style="margin-right:8px; width:16px; text-align:center;"></i> Order History</a>
+
+    
+
+                <a href="user.php?action=logout"><i class="fas fa-sign-out-alt" style="margin-right:8px; width:16px; text-align:center;"></i> Log out</a>
+
+              </div>
 
             </div>
 

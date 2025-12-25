@@ -8,49 +8,11 @@ $_bodyClass = 'transparent-header-page';
 
 include '_head.php';
 
+// Replace your manual $products array with a database query
+$stmt = $db->prepare("SELECT id, name, price, image_path, description, category_id FROM products WHERE name LIKE 'DJI%'");
+$stmt->execute();
+$products = $stmt->fetchAll();
 
-
-$imagesDir = __DIR__ . '/images/dji_product';
-
-$files = is_dir($imagesDir) ? array_values(array_filter(scandir($imagesDir), function ($f) {return !in_array($f, ['.','..']);})) : [];
-
-$priceRanges = [1599,2499,3299,1999];
-
-$categories = ['Drone', 'Action Camera', 'Gimbal', 'Drone'];
-
-
-
-$products = [];
-
-foreach ($files as $i => $file) {
-
-    $name = pathinfo($file, PATHINFO_FILENAME);
-
-    $displayName = ucwords(str_replace(['_','-'], ' ', $name));
-
-    $price = $priceRanges[$i % count($priceRanges)];
-
-    $category = $categories[$i % count($categories)];
-
-    $src = "/images/dji_product/" . $file;
-
-
-
-    $products[] = [
-
-        'name' => $displayName,
-
-        'price' => $price,
-
-        'image' => $src,
-
-        'category' => $category,
-
-        'brand' => 'DJI'
-
-    ];
-
-}
 
 ?>
 
@@ -286,25 +248,37 @@ foreach ($files as $i => $file) {
 
 <div class="products-grid">
 
-        <?php foreach ($products as $product): ?>
+        <?php foreach ($products as $p): ?>
 
-            <div class="product-card" 
+            <?php $id = (int)$p['id']; ?>
 
-                 data-category="<?= $product['category'] ?>" 
+            <div class="product-card" data-product-id="<?= $id ?>"
 
-                 data-price="<?= $product['price'] ?>"
+                 data-category="<?= htmlspecialchars($p['category_id'] ?? '') ?>" 
 
-                 data-name="<?= htmlspecialchars($product['name']) ?>">
+                 data-price="<?= $p['price'] ?>"
 
-                <img src="<?= $product['image'] ?>" alt="<?= htmlspecialchars($product['name']) ?>">
+                 data-name="<?= htmlspecialchars($p['name']) ?>">
+
+                <img src="<?= htmlspecialchars($p['image_path'] ?? '/images/placeholder.png') ?>" alt="<?= htmlspecialchars($p['name']) ?>" />
 
                 <div class="product-info">
 
-                    <div class="product-name"><?= htmlspecialchars($product['name']) ?></div>
+                    <div>
 
-                    <div class="product-price">RM<?= number_format($product['price'], 2) ?></div>
+                        <div class="product-name"><?= htmlspecialchars($p['name']) ?></div>
 
-                    <button type="button" class="add-to-cart" data-name="<?= htmlspecialchars($product['name']) ?>" data-price="<?= $product['price'] ?>" data-image="<?= $product['image'] ?>">Add to cart</button>
+                        <div class="product-subtitle"><?= htmlspecialchars($p['description'] ?? '') ?></div>
+
+                    </div>
+                    <div class="product-price">RM <?= number_format((float)$p['price'], 2) ?></div>
+                    <div class="product-footer">
+
+                        <button type="button" class="add-to-cart buy-btn" data-id="<?= $p['id'] ?>" data-name="<?= htmlspecialchars($p['name']) ?>" data-price="<?= $p['price'] ?>" data-image="<?= htmlspecialchars($p['image_path']) ?>">Add to cart</button>
+
+                        <button type="button" class="buy-now buy-btn" data-id="<?= $p['id'] ?>" data-name="<?= htmlspecialchars($p['name']) ?>" data-price="<?= $p['price'] ?>" data-image="<?= htmlspecialchars($p['image_path']) ?>">Buy now</button>
+
+                    </div>
 
                 </div>
 

@@ -221,7 +221,7 @@ include '_head.php';
     <!-- Contact Form -->
     <div class="contact-form-section">
         <h2>Send Us a Message</h2>
-        <form id="contactForm" method="post" action="">
+        <form id="contactForm" method="post" action="api/contact.php">
             <div class="form-group">
                 <label for="name">Full Name *</label>
                 <input type="text" id="name" name="name" required placeholder="John Doe">
@@ -260,10 +260,54 @@ include '_head.php';
 </div>
 
 <script>
+function setContactMsg(form, text, isError) {
+    let el = form.querySelector('.contact-msg');
+    if (!el) {
+        el = document.createElement('div');
+        el.className = 'contact-msg';
+        el.style.marginTop = '12px';
+        el.style.padding = '12px';
+        el.style.borderRadius = '4px';
+        el.style.fontSize = '14px';
+        form.appendChild(el);
+    }
+    el.textContent = text;
+    if (isError) {
+        el.style.background = '#ffebee';
+        el.style.color = '#c62828';
+        el.style.border = '1px solid #ffcdd2';
+    } else {
+        el.style.background = '#e8f5e9';
+        el.style.color = '#2e7d32';
+        el.style.border = '1px solid #c8e6c9';
+    }
+}
+
 document.getElementById('contactForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    alert('Thank you for contacting us! We will get back to you soon.');
-    this.reset();
+    const form = this;
+    const fd = new FormData(form);
+    const btn = form.querySelector('.submit-btn');
+    
+    btn.disabled = true;
+    btn.textContent = 'Sending...';
+    setContactMsg(form, 'Sending your message...', false);
+    
+    fetch(form.action, { method: 'POST', body: fd })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+            setContactMsg(form, data.message || (data.success ? 'Message sent.' : 'Something went wrong'), !data.success);
+            if (data.success) {
+                form.reset();
+            }
+        })
+        .catch(function() { 
+            setContactMsg(form, 'Network error. Please try again.', true); 
+        })
+        .finally(function() {
+            btn.disabled = false;
+            btn.textContent = 'Send Message';
+        });
 });
 </script>
 

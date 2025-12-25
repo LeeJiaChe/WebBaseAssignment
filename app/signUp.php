@@ -2,6 +2,7 @@
 
 session_start();
 
+require '_base.php';
 
 
 if (isset($_SESSION['user_email'])) {
@@ -59,67 +60,48 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
 
-
+    // Find this section in signUp.php and replace it:
     if (empty($errors)) {
-
-        $usersFile = __DIR__ . '/users.json';
-
-        $users = file_exists($usersFile) ? (json_decode(file_get_contents($usersFile), true) ?: []) : [];
-
-
-
-        foreach ($users as $u) {
-
-            if (isset($u['email']) && strcasecmp($u['email'], $email) === 0) {
-
-                $errors[] = 'This email is already registered.';
-
-                break;
-
-            }
-
+        // 1. Check if email exists in Database
+        $stmt = $db->prepare("SELECT id FROM users WHERE email = ?");
+        $stmt->execute([$email]);
+        if ($stmt->fetch()) {
+            $errors[] = 'This email is already registered.';
         }
-
-
 
         if (empty($errors)) {
+            // 2. Insert into Database (id is auto-generated)
+            $passwordHash = password_hash($pass1, PASSWORD_DEFAULT);
 
-            $newUser = [
+            // First, try inserting with the expected schema (role column exists).
+            $sqlWithRole = "INSERT INTO users (name, email, password_hash, role, created_at)
+                VALUES (?, ?, ?, 'user', NOW())";
 
-                'id' => uniqid('user_'),
-
-                'name' => $name,
-
-                'email' => $email,
-
-                'password_hash' => password_hash($pass1, PASSWORD_DEFAULT),
-
-                'role' => 'member',
-
-                'photo' => '',
-
-                'created_at' => date('Y-m-d H:i:s')
-
-            ];
-
-            $users[] = $newUser;
-
-
-
-            if (file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT))) {
-
-                header('Location: /login.php?registered=1&email=' . urlencode($email));
-
-                exit;
-
-            } else {
-
-                $errors[] = 'System error: Could not save user data.';
-
+            try {
+                $stmt = $db->prepare($sqlWithRole);
+                if ($stmt->execute([$name, $email, $passwordHash])) {
+                    header('Location: login.php?registered=1&email=' . urlencode($email));
+                    exit;
+                }
+            } catch (PDOException $e) {
+                // If the role column is missing (SQLSTATE 42S22), fall back to a minimal insert
+                if ($e->getCode() === '42S22') {
+                    $sqlFallback = "INSERT INTO users (name, email, password_hash)
+                        VALUES (?, ?, ?)";
+                    try {
+                        $stmt = $db->prepare($sqlFallback);
+                        if ($stmt->execute([$name, $email, $passwordHash])) {
+                            header('Location: login.php?registered=1&email=' . urlencode($email));
+                            exit;
+                        }
+                    } catch (PDOException $e2) {
+                        $errors[] = 'System error: ' . $e2->getMessage();
+                    }
+                } else {
+                    $errors[] = 'System error: ' . $e->getMessage();
+                }
             }
-
         }
-
     }
 
 }
@@ -298,7 +280,6 @@ require __DIR__ . '/_head.php';
 
                 </div>
 
-                
 
                 <button type="submit" class="btn-auth">SIGN UP</button>
 

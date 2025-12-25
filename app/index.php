@@ -7,10 +7,10 @@ include '_head.php';
 <div class="slider-container">
 	<div class="slider" id="ads-slider">
 		<img src="/images/sony_ads1.jpg" alt="Sony Ad" class="slider-img">
-		<img src="/images/canon_ads2.jpg" alt="Canon Ad 2" class="slider-img">
-		<img src="/images/Fujifilm_ads1.jpg" alt="Fujifilm Ad" class="slider-img">
+		<img src="/images/canon_ads1.png" alt="Canon Ad 2" class="slider-img">
+		<img src="/images/Fujifilm_ads2.png" alt="Fujifilm Ad" class="slider-img">
 		<img src="/images/DJI_ads1.jpg" alt="DJI Ad" class="slider-img">
-		<img src="/images/insta360_ads1.jpg" alt="Insta360 Ad" class="slider-img">
+		<img src="/images/insta360_ads2.jpg" alt="Insta360 Ad" class="slider-img">
 	</div>
 	<button class="slider-btn prev" id="slider-prev">&#8249;</button>
 	<button class="slider-btn next" id="slider-next">&#8250;</button>
@@ -62,10 +62,80 @@ include '_head.php';
 
 <!-- Featured Products -->
 <?php
-// Load DB and product helpers and render featured products dynamically
-$pdo = require __DIR__ . '/lib/db.php';
-require_once __DIR__ . '/lib/products.php';
-$featured = get_featured_products($pdo, 6);
+// Load DB and build a diverse featured set inline (no helper needed here)
+global $db;
+if (!isset($db)) {
+	$db = require __DIR__ . '/lib/db.php';
+}
+
+// Pull a pool of latest featured items
+$poolLimit = 60;
+$stmt = $db->prepare('SELECT id, sku, name, description, price, currency, image_path, created_at FROM products WHERE featured = 1 ORDER BY created_at DESC LIMIT :limit');
+$stmt->bindValue(':limit', $poolLimit, PDO::PARAM_INT);
+$stmt->execute();
+$rows = $stmt->fetchAll();
+
+$brandsWanted = ['Canon','Sony','Fujifilm','Insta360','DJI'];
+$detectBrand = function ($name, $imagePath) {
+	$map = [
+		'Canon' => ['images/canon_product/'],
+		'Sony' => ['images/sony_product/'],
+		'Fujifilm' => ['images/fujifilm_product/'],
+		'Insta360' => ['images/insta360_product/'],
+		'DJI' => ['images/dji_product/'],
+	];
+	foreach ($map as $brand => $folders) {
+		if (stripos($name, $brand) === 0) return $brand;
+		foreach ($folders as $folder) {
+			if (!empty($imagePath) && stripos($imagePath, $folder) !== false) return $brand;
+		}
+	}
+	return 'Other';
+};
+
+$featured = [];
+$selectedIds = [];
+$brandSeen = [];
+
+// First pass: newest featured per desired brand
+foreach ($brandsWanted as $wanted) {
+	foreach ($rows as $r) {
+		$brand = $detectBrand($r['name'] ?? '', $r['image_path'] ?? '');
+		if ($brand === $wanted && !in_array($r['id'], $selectedIds, true)) {
+			$featured[] = $r;
+			$selectedIds[] = $r['id'];
+			$brandSeen[$brand] = true;
+			break;
+		}
+	}
+}
+
+// Second pass: fill remaining slots with newest featured overall
+foreach ($rows as $r) {
+	if (count($featured) >= 9) break;
+	if (!in_array($r['id'], $selectedIds, true)) {
+		$featured[] = $r;
+		$selectedIds[] = $r['id'];
+		$brand = $detectBrand($r['name'] ?? '', $r['image_path'] ?? '');
+		$brandSeen[$brand] = true;
+	}
+}
+
+// If still missing brands, pull newest per missing brand (even if not featured)
+if (count(array_intersect(array_keys($brandSeen), $brandsWanted)) < 5 && count($featured) < 9) {
+	foreach ($brandsWanted as $wanted) {
+		if (isset($brandSeen[$wanted])) continue;
+		if (count($featured) >= 9) break;
+		$q = $db->prepare('SELECT id, sku, name, description, price, currency, image_path, created_at FROM products WHERE name LIKE :prefix ORDER BY created_at DESC LIMIT 1');
+		$q->execute([':prefix' => $wanted.'%']);
+		$extra = $q->fetch();
+		if ($extra && !in_array($extra['id'], $selectedIds, true)) {
+			$featured[] = $extra;
+			$selectedIds[] = $extra['id'];
+			$brandSeen[$wanted] = true;
+		}
+	}
+}
 ?>
 <section class="featured-products" style="padding:40px 20px; max-width:1200px; margin:40px auto;">
 	<h2 style="font-size:1.6rem; margin-bottom:18px; text-align:center;">Featured Products</h2>
@@ -73,15 +143,15 @@ $featured = get_featured_products($pdo, 6);
 		<?php foreach ($featured as $p): ?>
 			<?php $id = (int)$p['id']; ?>
 			<div class="product-card">
-				<img src="<?= htmlspecialchars($p['image_path'] ?? '/images/placeholder.png') ?>" alt="<?= htmlspecialchars($p['name']) ?>" />
+				<a href="/product.php?id=<?= $id ?>" aria-label="View <?= htmlspecialchars($p['name']) ?>">
+					<img src="<?= htmlspecialchars($p['image_path'] ?? '/images/placeholder.png') ?>" alt="<?= htmlspecialchars($p['name']) ?>" />
+				</a>
 				<div class="product-info">
-					<div>
-						<div class="product-name"><?= htmlspecialchars($p['name']) ?></div>
-						<div class="product-subtitle"><?= htmlspecialchars($p['description'] ?? '') ?></div>
-					</div>
-					<div class="product-footer">
-						<a class="learn-link" href="product.php?id=<?= $id ?>">Learn more</a>
-						<a class="buy-btn" href="cart.php?product_id=<?= $id ?>">Buy now</a>
+					<div class="product-name"><?= htmlspecialchars($p['name']) ?></div>
+					<div class="product-subtitle"><?= htmlspecialchars($p['description'] ?? '') ?></div>
+					<div style="text-align:center; color:#555; margin-top:6px;">RM <?= number_format((float)$p['price'], 2) ?></div>
+					<div style="text-align:center; margin-top:10px;">
+						<a class="btn btn-transparent" href="/product.php?id=<?= $id ?>">View</a>
 					</div>
 				</div>
 			</div>

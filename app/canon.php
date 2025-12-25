@@ -1,57 +1,40 @@
 <?php
 
+// app/canon.php
+
 require '_base.php';
 
-$_title = 'Canon Products - VisionX';
-$_bodyClass = 'transparent-header-page';
-
-include '_head.php';
 
 
+// 1. 确保数据库已连接
 
-$imagesDir = __DIR__ . '/images/canon_product';
+global $db;
 
-$files = is_dir($imagesDir) ? array_values(array_filter(scandir($imagesDir), function ($f) {return !in_array($f, ['.','..']);})) : [];
+if (!isset($db)) {
 
-
-
-$products = [];
-
-$priceRanges = [1999, 2499, 2999, 3499, 3999, 4499, 4999, 5999];
-
-$categories = ['DSLR', 'Mirrorless', 'Mirrorless', 'DSLR', 'Mirrorless'];
-
-
-
-foreach ($files as $i => $file) {
-
-    $name = pathinfo($file, PATHINFO_FILENAME);
-
-    $displayName = ucwords(str_replace(['_','-'], ' ', $name));
-
-    $price = $priceRanges[$i % count($priceRanges)];
-
-    $category = $categories[$i % count($categories)];
-
-    $src = "/images/canon_product/" . $file;
-
-
-
-    $products[] = [
-
-        'name' => $displayName,
-
-        'price' => $price,
-
-        'image' => $src,
-
-        'category' => $category,
-
-        'brand' => 'Canon'
-
-    ];
+    $db = require __DIR__ . '/lib/db.php';
 
 }
+
+
+
+// 2. 从数据库查询 Canon 品牌的产品 (名字以 Canon 开头的)
+
+$stmt = $db->prepare("SELECT id, name, price, image_path, description, category_id FROM products WHERE name LIKE 'Canon%'");
+
+$stmt->execute();
+
+$products = $stmt->fetchAll();
+
+
+
+$_title = 'Canon Products - VisionX';
+
+$_bodyClass = 'transparent-header-page';
+
+
+
+include '_head.php';
 
 ?>
 
@@ -73,27 +56,9 @@ foreach ($files as $i => $file) {
 
 }
 
+.brand-header h1 { margin: 0; font-size: 2.5rem; }
 
-
-.brand-header h1 {
-
-    margin: 0;
-
-    font-size: 2.5rem;
-
-}
-
-
-
-.brand-header p {
-
-    margin: 10px 0 0 0;
-
-    font-size: 1.1rem;
-
-    opacity: 0.9;
-
-}
+.brand-header p { margin: 10px 0 0 0; font-size: 1.1rem; opacity: 0.9; }
 
 
 
@@ -117,83 +82,13 @@ foreach ($files as $i => $file) {
 
 }
 
+.filter-group { display: flex; align-items: center; gap: 10px; }
 
+.filter-group label { font-weight: 500; color: #333; }
 
-.filter-group {
+.filter-group select { padding: 8px 12px; border: 1px solid #ddd; border-radius: 4px; background: white; }
 
-    display: flex;
-
-    align-items: center;
-
-    gap: 10px;
-
-}
-
-
-
-.filter-group label {
-
-    font-weight: 500;
-
-    color: #333;
-
-}
-
-
-
-.filter-group select {
-
-    padding: 8px 12px;
-
-    border: 1px solid #ddd;
-
-    border-radius: 4px;
-
-    background: white;
-
-}
-
-
-
-.products-count {
-
-    margin-left: auto;
-
-    color: #666;
-
-    font-size: 14px;
-
-}
-
-
-
-@media (max-width: 768px) {
-
-    .filter-section {
-
-        flex-direction: column;
-
-        align-items: stretch;
-
-    }
-
-    
-
-    .filter-group {
-
-        width: 100%;
-
-    }
-
-    
-
-    .products-count {
-
-        margin-left: 0;
-
-    }
-
-}
+.products-count { margin-left: auto; color: #666; font-size: 14px; }
 
 </style>
 
@@ -212,22 +107,13 @@ foreach ($files as $i => $file) {
 <div class="filter-section">
 
     <div class="filter-group">
-
         <label for="categoryFilter">Category:</label>
-
         <select id="categoryFilter">
-
             <option value="">All Categories</option>
-
-            <option value="DSLR">DSLR</option>
-
-            <option value="Mirrorless">Mirrorless</option>
-
+            <option value="1">Mirrorless</option>
+            <option value="2">DSLR</option>
         </select>
-
     </div>
-
-
 
     <div class="filter-group">
 
@@ -241,35 +127,11 @@ foreach ($files as $i => $file) {
 
             <option value="3000-4999">RM 3,000 - RM 4,999</option>
 
-            <option value="5000-7999">RM 5,000 - RM 7,999</option>
-
-            <option value="8000+">RM 8,000+</option>
+            <option value="5000+">RM 5,000+</option>
 
         </select>
 
     </div>
-
-
-
-    <div class="filter-group">
-
-        <label for="sortFilter">Sort By:</label>
-
-        <select id="sortFilter">
-
-            <option value="featured">Featured</option>
-
-            <option value="price-low">Price: Low to High</option>
-
-            <option value="price-high">Price: High to Low</option>
-
-            <option value="name">Name: A to Z</option>
-
-        </select>
-
-    </div>
-
-
 
     <div class="products-count">
 
@@ -283,35 +145,67 @@ foreach ($files as $i => $file) {
 
 <div class="products-grid">
 
-    <?php foreach ($products as $product): ?>
+    <?php foreach ($products as $p): ?>
 
-        <div class="product-card" 
+        <?php $id = (int)$p['id']; ?>
 
-             data-category="<?= $product['category'] ?>" 
+        <div class="product-card" data-product-id="<?= $id ?>" 
 
-             data-price="<?= $product['price'] ?>"
+             data-category="<?= htmlspecialchars($p['category_id'] ?? '') ?>" 
 
-             data-name="<?= htmlspecialchars($product['name']) ?>">
+             data-price="<?= $p['price'] ?>"
 
-            <img src="<?= $product['image'] ?>" alt="<?= htmlspecialchars($product['name']) ?>">
+             data-name="<?= htmlspecialchars($p['name']) ?>">
+
+            
+
+            <img src="<?= htmlspecialchars($p['image_path'] ?? '/images/placeholder.png') ?>" alt="<?= htmlspecialchars($p['name']) ?>" />
+
+            
 
             <div class="product-info">
 
-                <div class="product-name"><?= htmlspecialchars($product['name']) ?></div>
+                <div>
 
-                <div class="product-price">RM<?= number_format($product['price'], 2) ?></div>
+                    <div class="product-name"><?= htmlspecialchars($p['name']) ?></div>
 
-                <button type="button" class="add-to-cart" 
+                    <div class="product-subtitle"><?= htmlspecialchars($p['description'] ?? '') ?></div>
 
-                        data-name="<?= htmlspecialchars($product['name']) ?>" 
+                </div>
 
-                        data-price="<?= $product['price'] ?>" 
+                <div class="product-price">RM <?= number_format((float)$p['price'], 2) ?></div>
 
-                        data-image="<?= $product['image'] ?>">
+                <div class="product-footer">
 
-                    Add to cart
+                    <button type="button" class="add-to-cart buy-btn" 
 
-                </button>
+                        data-id="<?= $p['id'] ?>" 
+
+                        data-name="<?= htmlspecialchars($p['name']) ?>" 
+
+                        data-price="<?= $p['price'] ?>" 
+
+                        data-image="<?= htmlspecialchars($p['image_path']) ?>">
+
+                        Add to cart
+
+                    </button>
+
+                    <button type="button" class="buy-now buy-btn" 
+
+                        data-id="<?= $p['id'] ?>" 
+
+                        data-name="<?= htmlspecialchars($p['name']) ?>" 
+
+                        data-price="<?= $p['price'] ?>" 
+
+                        data-image="<?= htmlspecialchars($p['image_path']) ?>">
+
+                        Buy now
+
+                    </button>
+
+                </div>
 
             </div>
 
@@ -325,12 +219,11 @@ foreach ($files as $i => $file) {
 
 <script>
 
+// 这里保留你原来的筛选 JS 逻辑即可
 
-document.getElementById('categoryFilter').addEventListener('change', filterProducts);
+document.getElementById('categoryFilter')?.addEventListener('change', filterProducts);
 
-document.getElementById('priceFilter').addEventListener('change', filterProducts);
-
-document.getElementById('sortFilter').addEventListener('change', sortProducts);
+document.getElementById('priceFilter')?.addEventListener('change', filterProducts);
 
 
 
@@ -342,8 +235,6 @@ function filterProducts() {
 
     const cards = document.querySelectorAll('.product-card');
 
-    
-
     let visibleCount = 0;
 
     
@@ -354,13 +245,9 @@ function filterProducts() {
 
         const price = parseInt(card.dataset.price);
 
-        
-
         let showCategory = !categoryFilter || category === categoryFilter;
 
         let showPrice = true;
-
-        
 
         if (priceFilter) {
 
@@ -368,69 +255,17 @@ function filterProducts() {
 
             else if (priceFilter === '3000-4999') showPrice = price >= 3000 && price <= 4999;
 
-            else if (priceFilter === '5000-7999') showPrice = price >= 5000 && price <= 7999;
-
-            else if (priceFilter === '8000+') showPrice = price >= 8000;
+            else if (priceFilter === '5000+') showPrice = price >= 5000;
 
         }
 
-        
+        if (showCategory && showPrice) { card.style.display = ''; visibleCount++; }
 
-        if (showCategory && showPrice) {
-
-            card.style.display = '';
-
-            visibleCount++;
-
-        } else {
-
-            card.style.display = 'none';
-
-        }
+        else { card.style.display = 'none'; }
 
     });
-
-    
 
     document.getElementById('productCount').textContent = visibleCount;
-
-}
-
-
-
-function sortProducts() {
-
-    const sortValue = document.getElementById('sortFilter').value;
-
-    const grid = document.querySelector('.products-grid');
-
-    const cards = Array.from(grid.querySelectorAll('.product-card'));
-
-    
-
-    cards.sort((a, b) => {
-
-        if (sortValue === 'price-low') {
-
-            return parseInt(a.dataset.price) - parseInt(b.dataset.price);
-
-        } else if (sortValue === 'price-high') {
-
-            return parseInt(b.dataset.price) - parseInt(a.dataset.price);
-
-        } else if (sortValue === 'name') {
-
-            return a.dataset.name.localeCompare(b.dataset.name);
-
-        }
-
-        return 0; 
-
-    });
-
-    
-
-    cards.forEach(card => grid.appendChild(card));
 
 }
 

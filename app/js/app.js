@@ -1,5 +1,8 @@
+// app/js/app.js
+
 $(() => {
-  // --- Header Scroll Effect (Start) ---
+  // --- Header 效果 ---
+
   $(window).on("scroll", function () {
     if ($(window).scrollTop() > 50) {
       $(".main-header").addClass("scrolled");
@@ -7,244 +10,261 @@ $(() => {
       $(".main-header").removeClass("scrolled");
     }
   });
-  // 页面刷新时也检查一次
-  if ($(window).scrollTop() > 50) $(".main-header").addClass("scrolled");
-  // --- Header Scroll Effect (End) ---
 
-  // Initiate GET request
-  $("[data-get]").on("click", (e) => {
-    e.preventDefault();
-    const url = e.target.dataset.get;
-    location = url || location;
+  if ($(window).scrollTop() > 50) $(".main-header").addClass("scrolled");
+
+  // --- Product Card Click Handler ---
+  $(document).on("click", ".product-card", function (e) {
+    // Only navigate if clicking on the card itself, not on buttons
+    if (!$(e.target).closest("button").length) {
+      const productId = $(this).data("product-id");
+      if (productId) {
+        window.location.href = "product.php?id=" + productId;
+      }
+    }
   });
 
-  // No JS toggle for the user icon dropdown — menu is shown via CSS on hover/focus
-  // Add to cart handler (stores simple cart in localStorage)
+  // --- Add to Cart 处理 ---
+
   $(document).on("click", ".add-to-cart", function () {
     const $btn = $(this);
+
+    addToLocalStorage($btn);
+
+    // 显示提示
+
+    const $toast = $('<div class="cart-toast">Added to cart</div>');
+
+    $("body").append($toast);
+
+    $toast.css({
+      position: "fixed",
+      top: "80px",
+      left: "50%",
+      transform: "translateX(-50%)",
+      background: "#222",
+      color: "#fff",
+
+      padding: "12px 24px",
+      borderRadius: "6px",
+      zIndex: 9999,
+    });
+
+    setTimeout(() => {
+      $toast.fadeOut(400, () => $toast.remove());
+    }, 1400);
+
+    updateCartBadge();
+
+    openCartDrawer();
+  });
+
+  // --- 新增：Buy Now 处理 ---
+
+  $(document).on("click", ".buy-now", function (e) {
+    e.preventDefault();
+
+    const $btn = $(this);
+
+    addToLocalStorage($btn); // 先存入购物车
+
+    window.location.href = "checkout.php"; // 直接跳去结账
+  });
+
+  // 公用存入 LocalStorage 函数
+
+  function addToLocalStorage($btn) {
     const item = {
+      id: $btn.data("id"),
+
       name: $btn.data("name"),
+
       price: parseFloat($btn.data("price")),
+
       image: $btn.data("image"),
+
       qty: 1,
     };
 
     let cart = [];
+
     try {
       cart = JSON.parse(localStorage.getItem("cart") || "[]");
     } catch (e) {
       cart = [];
     }
 
-    // simple merge: if item name exists increment qty
-    const existing = cart.find((c) => c.name === item.name);
+    const existing = cart.find((c) => c.id === item.id);
+
     if (existing) {
       existing.qty += 1;
     } else {
       cart.push(item);
     }
+
     localStorage.setItem("cart", JSON.stringify(cart));
 
-    // show small toast
-    const $toast = $('<div class="cart-toast">Added to cart</div>');
-    $("body").append($toast);
-    $toast.css({
-      position: "fixed",
-      right: "16px",
-      bottom: "16px",
-      background: "#222",
-      color: "#fff",
-      padding: "8px 12px",
-      borderRadius: "6px",
-      zIndex: 9999,
-    });
-    setTimeout(() => {
-      $toast.fadeOut(400, () => $toast.remove());
-    }, 1400);
-    // update cart badge
-    if (typeof updateCartBadge === "function") updateCartBadge();
+    localStorage.setItem("lastAdded", item.name);
+  }
 
-    // remember last added item name so drawer can highlight it
-    try {
-      localStorage.setItem("lastAdded", item.name);
-    } catch (e) {}
+  // --- 购物车侧栏逻辑 ---
 
-    // temporary disable button to avoid duplicate clicks and show feedback
-    $btn.prop("disabled", true);
-    const prevText = $btn.text();
-    $btn.text("Added");
-    setTimeout(() => {
-      $btn.prop("disabled", false);
-      $btn.text(prevText);
-    }, 1200);
-
-    // open cart drawer and render
-    openCartDrawer();
-  });
-
-  // cart drawer creation/rendering
   function ensureCartDrawer() {
     if ($("#cartOverlay").length) return;
+
     const $overlay = $('<div id="cartOverlay" class="cart-overlay"></div>');
+
     const $drawer = $(
       '<div id="cartDrawer" class="cart-drawer" aria-hidden="true">' +
-        '<div class="cart-header"><div><strong>Cart</strong></div><div><button id="cartClose" aria-label="Close" class="cart-close">&times;</button></div></div>' +
+        '<div class="cart-header"><div><strong>Cart</strong></div><div><button id="cartClose" class="cart-close">&times;</button></div></div>' +
         '<div class="cart-body"><div id="cartDrawerItems"></div></div>' +
         '<div class="cart-footer"><div id="cartDrawerTotal"></div><div style="margin-top:8px"><button id="checkoutBtn" class="checkout-btn">CHECKOUT</button></div></div>' +
         "</div>",
     );
+
     $("body").append($overlay).append($drawer);
 
     $overlay.on("click", closeCartDrawer);
-    $drawer.find("#cartClose").on("click", closeCartDrawer);
+
+    $("#cartClose").on("click", closeCartDrawer);
   }
 
   function renderCartDrawer() {
     ensureCartDrawer();
-    let cart = [];
-    try {
-      cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    } catch (e) {
-      cart = [];
-    }
-    const $list = $("#cartDrawerItems");
-    $list.empty();
+
+    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+    const $list = $("#cartDrawerItems").empty();
+
     if (!cart.length) {
-      $("#cartDrawerItems").append(
-        '<div class="cart-empty">Your cart is empty.</div>',
-      );
+      $list.append('<div class="cart-empty">Your cart is empty.</div>');
+
       $("#cartDrawerTotal").text("");
+
+      $("#checkoutBtn")
+        .text("CHECKOUT")
+        .prop("disabled", true)
+        .css("opacity", "0.5")
+        .css("cursor", "not-allowed");
+
       return;
     }
 
     let total = 0;
-    const lastAdded = localStorage.getItem("lastAdded");
+
     cart.forEach((it, idx) => {
-      const subtotal = (it.price || 0) * (it.qty || 1);
-      total += subtotal;
-      const $row = $('<div class="cart-item" data-idx="' + idx + '"></div>');
-      const $img = $("<img>")
-        .attr("src", it.image || "")
-        .attr("alt", it.name || "");
-      const $meta = $('<div class="cart-item-meta"></div>');
-      $meta.append('<div class="name">' + (it.name || "") + "</div>");
+      total += it.price * it.qty;
 
-      // quantity controls
-      const $qtyControls = $(
-        '<div class="qty-controls" data-idx="' +
-          idx +
-          '">' +
-          '<button class="qty-decr" aria-label="Decrease">-</button>' +
-          '<span class="qty-value">' +
-          (it.qty || 1) +
-          "</span>" +
-          '<button class="qty-incr" aria-label="Increase">+</button>' +
-          "</div>",
-      );
-      $meta.append($qtyControls);
+      const $row = $(`<div class="cart-item" data-idx="${idx}">
 
-      $meta.append(
-        '<div class="price">RM' + (it.price || 0).toFixed(2) + "</div>",
-      );
-      const $remove = $('<button class="remove-item">Remove</button>');
-      $row.append($img).append($meta).append($remove);
+        <img src="${it.image}">
+
+        <div class="cart-item-meta">
+
+          <div class="name">${it.name}</div>
+
+          <div class="qty-controls">
+
+            <button class="qty-decr">-</button><span>${it.qty}</span><button class="qty-incr">+</button>
+
+          </div>
+
+          <div class="price">RM${(it.price * it.qty).toFixed(2)}</div>
+
+        </div>
+
+        <button class="remove-item">Remove</button>
+
+      </div>`);
+
       $list.append($row);
-
-      if (lastAdded && it.name === lastAdded) {
-        $row.addClass("just-added");
-        setTimeout(() => $row.removeClass("just-added"), 1400);
-      }
     });
+
     $("#cartDrawerTotal").text("Total: RM" + total.toFixed(2));
-    const $checkout = $("#checkoutBtn");
-    if ($checkout.length) {
-      $checkout.prop("disabled", total <= 0);
-      $checkout.text("CHECKOUT — RM" + total.toFixed(2));
-    }
 
-    // wire remove
-    $("#cartDrawerItems")
-      .find(".remove-item")
-      .off("click")
-      .on("click", function () {
-        const idx = $(this).closest(".cart-item").data("idx");
-        let c = JSON.parse(localStorage.getItem("cart") || "[]");
-        c.splice(idx, 1);
-        localStorage.setItem("cart", JSON.stringify(c));
-        renderCartDrawer();
-        if (typeof updateCartBadge === "function") updateCartBadge();
-      });
-
-    // wire qty controls
-    $("#cartDrawerItems")
-      .find(".qty-controls")
-      .off("click")
-      .on("click", "button", function (e) {
-        const $btn = $(this);
-        const idx = $btn.closest(".qty-controls").data("idx");
-        let c = JSON.parse(localStorage.getItem("cart") || "[]");
-        if (!c[idx]) return;
-        if ($btn.hasClass("qty-incr")) {
-          c[idx].qty = (c[idx].qty || 1) + 1;
-        } else if ($btn.hasClass("qty-decr")) {
-          c[idx].qty = Math.max(1, (c[idx].qty || 1) - 1);
-        }
-        localStorage.setItem("cart", JSON.stringify(c));
-        renderCartDrawer();
-        if (typeof updateCartBadge === "function") updateCartBadge();
-      });
+    $("#checkoutBtn")
+      .text("CHECKOUT — RM" + total.toFixed(2))
+      .prop("disabled", false)
+      .css("opacity", "1")
+      .css("cursor", "pointer");
   }
 
   function openCartDrawer() {
-    ensureCartDrawer();
-    $("#cartOverlay").fadeIn(160);
-    $("#cartDrawer").addClass("open").attr("aria-hidden", "false");
     renderCartDrawer();
+    $("#cartOverlay").show();
+    $("#cartDrawer").addClass("open");
   }
 
   function closeCartDrawer() {
-    $("#cartOverlay").fadeOut(160);
-    $("#cartDrawer").removeClass("open").attr("aria-hidden", "true");
+    $("#cartOverlay").hide();
+    $("#cartDrawer").removeClass("open");
   }
 
-  // open drawer when cart button clicked
-  $(document).on("click", "a.cart-button", function (e) {
+  $(document).on("click", "a.cart-button", (e) => {
     e.preventDefault();
     openCartDrawer();
   });
 
-  // drawer checkout button -> go to checkout page
-  $(document).on("click", "#checkoutBtn", function (e) {
-    e.preventDefault();
-    // if disabled, ignore
-    if ($(this).prop("disabled")) return;
+  $(document).on("click", "#checkoutBtn", () => {
+    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+    if (cart.length === 0) {
+      return false;
+    }
     window.location = "checkout.php";
   });
 
-  // exposed helper to update badge
+  // 数量加减逻辑
+
+  $(document).on("click", ".qty-incr, .qty-decr", function () {
+    const idx = $(this).closest(".cart-item").data("idx");
+
+    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+    if ($(this).hasClass("qty-incr")) cart[idx].qty++;
+    else cart[idx].qty = Math.max(1, cart[idx].qty - 1);
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+
+    renderCartDrawer();
+
+    updateCartBadge();
+  });
+
+  $(document).on("click", ".remove-item", function () {
+    const idx = $(this).closest(".cart-item").data("idx");
+
+    let cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+    cart.splice(idx, 1);
+
+    localStorage.setItem("cart", JSON.stringify(cart));
+
+    renderCartDrawer();
+
+    updateCartBadge();
+  });
+
   window.updateCartBadge = function () {
-    let cart = [];
-    try {
-      cart = JSON.parse(localStorage.getItem("cart") || "[]");
-    } catch (e) {
-      cart = [];
-    }
-    const count = cart.reduce((s, i) => s + (i.qty || 0), 0);
-    const $badge = $("#cartCount");
-    if ($badge.length) {
-      $badge.text(count);
-      if (count <= 0) $badge.addClass("hidden");
-      else $badge.removeClass("hidden");
-    }
+    const cart = JSON.parse(localStorage.getItem("cart") || "[]");
+
+    const count = cart.reduce((s, i) => s + i.qty, 0);
+
+    $("#cartCount")
+      .text(count)
+      .toggleClass("hidden", count <= 0);
   };
 
-  // initialize badge on load
-  if (
-    document.readyState === "complete" ||
-    document.readyState === "interactive"
-  ) {
-    window.updateCartBadge();
-  } else {
-    $(window).on("load", () => window.updateCartBadge());
-  }
+  updateCartBadge();
+  // --- User Dropdown Logic ---
+  $(document).on("click", "#userIconButton", function (e) {
+    e.stopPropagation(); // Prevent event from bubbling to document
+    $("#userIconMenu").toggleClass("show"); // Toggle visibility
+  });
+
+  // Close dropdown when clicking outside
+  $(document).on("click", function (e) {
+    if (!$(e.target).closest("#userIconDropdown").length) {
+      $("#userIconMenu").removeClass("show");
+    }
+  });
 });

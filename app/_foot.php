@@ -7,16 +7,16 @@
                     <img src="images/VisionX.png" alt="VISIONX" class="footer-logo-img">
                 </div>
                 <div class="footer-col footer-col-about">
-                    <h3>About VISIONX</h3>
+                    <h3 style="color: black;">About VISIONX</h3>
                     <p>VISIONX is a trusted destination in Malaysia for cameras, drones, and imaging accessories. With extensive experience in the industry, we focus on delivering top-tier products from leading brands such as Canon, Fujifilm, DJI, Sony, Insta360, and more.</p>
                     <p>Fully operated by TARUMT, VISIONX is dedicated to offering high-quality gear at highly competitive prices. Our goal is to ensure complete customer satisfaction through reliable service, fast delivery, and dependable warranty support.</p>
                     <p>At VISIONX, you’ll find the ideal combination of what every creator needs: premium equipment, great value, quick shipping, and full after-sales assistance.</p>
                 </div>
                 <div class="footer-col footer-col-actions">
                     <h3>Newsletter</h3>
-                    <form class="footer-newsletter" action="#" method="post">
-                        <input type="email" name="email" placeholder="Email Address" aria-label="Email address">
-                        <button type="submit">Subscribe</button>
+                    <form class="footer-newsletter" action="api/subscribe.php" method="post" style="display:flex;flex-direction:column;gap:10px;align-items:flex-start;">
+                        <input type="email" name="email" placeholder="Email Address" aria-label="Email address" required style="width:320px;max-width:100%;padding:14px 16px;border:1px solid #c9c9c9;border-radius:18px;font-size:16px;">
+                        <button type="submit" style="padding:12px 20px;background:#000;color:#fff;border:none;border-radius:14px;font-weight:700;cursor:pointer;">Subscribe</button>
                     </form>
 
                     <h3 style="margin-top:20px">Follow Us</h3>
@@ -31,5 +31,61 @@
         <footer class="site-footer-bar">
             <div class="site-footer-inner">&copy; 2025 - VISIONX Official Store Malaysia</div>
         </footer>
+        
+<script>
+function setNewsletterMsg(form, text, isError) {
+    let el = form.querySelector('.newsletter-msg');
+    if (!el) {
+        el = document.createElement('div');
+        el.className = 'newsletter-msg';
+        el.style.marginTop = '6px';
+        el.style.fontSize = '14px';
+        form.appendChild(el);
+    }
+    el.textContent = text;
+    el.style.color = isError ? '#c62828' : '#2e7d32';
+}
+
+document.querySelectorAll('form.footer-newsletter').forEach(function(form) {
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const fd = new FormData(form);
+
+        // Instant feedback without waiting for the network
+        setNewsletterMsg(form, 'Sending...', false);
+
+        fetch(form.action, { method: 'POST', body: fd })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                setNewsletterMsg(form, data.message || (data.success ? 'Subscribed.' : 'Something went wrong'), !data.success);
+            })
+            .catch(function() { setNewsletterMsg(form, 'Network error. Please try again.', true); });
+    });
+});
+
+const errorList = document.querySelector('.notice-error ul');
+    if (errorList) {
+        const text = errorList.innerHTML;
+        // Check if message mentions "Wait"
+        if (text.includes("Wait")) {
+            // Reload the page automatically when the timer might be done (e.g. 30s)
+            // Or just let the user re-submit.
+            
+            // Simple visual countdown (Optional):
+            let seconds = text.match(/\d+/)[0]; // Extract the number
+            setInterval(function() {
+                seconds--;
+                if (seconds > 0) {
+                    // Update the number on screen (This is tricky without a specific span ID, 
+                    // but standard PHP refresh is usually enough for assignments)
+                } else {
+                   // When time is up, reload page to enable login
+                   location.reload(); 
+                }
+            }, 1000);
+        }
+    }
+</script>
+
 </body>
 </html>

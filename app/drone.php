@@ -4,15 +4,43 @@ $_title = 'Drone - VisionX';
 $_bodyClass = 'transparent-header-page';
 include '_head.php';
 
-// Sample products - you can modify this based on your actual products
-$products = [
-    ['name' => 'Sony Alpha A7 IV', 'price' => 8999, 'image' => '/images/sony_product/sony_a7iv.jpg', 'brand' => 'Sony'],
-    ['name' => 'Canon EOS R6 Mark II', 'price' => 9999, 'image' => '/images/canon_product/canon_r6.jpg', 'brand' => 'Canon'],
-    ['name' => 'Fujifilm X-T5', 'price' => 6999, 'image' => '/images/fujifilm_product/fuji_xt5.jpg', 'brand' => 'Fujifilm'],
-    ['name' => 'Sony A6400', 'price' => 3999, 'image' => '/images/sony_product/sony_a6400.jpg', 'brand' => 'Sony'],
-    ['name' => 'Canon EOS R50', 'price' => 3499, 'image' => '/images/canon_product/canon_r50.jpg', 'brand' => 'Canon'],
-    ['name' => 'Fujifilm X-S20', 'price' => 4999, 'image' => '/images/fujifilm_product/fuji_xs20.jpg', 'brand' => 'Fujifilm'],
-];
+$db = require __DIR__ . '/lib/db.php';
+
+$detectBrand = function (string $name = '', ?string $imagePath = null): string {
+    $map = [
+        'DJI' => ['dji_', 'images/dji_product/'],
+        'Sony' => ['sony_', 'images/sony_product/'],
+        'Canon' => ['canon_', 'images/canon_product/'],
+        'Fujifilm' => ['fujifilm_', 'images/fujifilm_product/'],
+        'Insta360' => ['insta360_', 'images/insta360_product/'],
+    ];
+    foreach ($map as $brand => $patterns) {
+        foreach ($patterns as $p) {
+            if (stripos($name, $brand) === 0 || (!empty($imagePath) && stripos($imagePath, $p) !== false)) {
+                return $brand;
+            }
+        }
+    }
+    return 'Other';
+};
+
+// Drone classification by image/name containing 'drone' or dji
+$stmt = $db->prepare("SELECT id, name, price, currency, image_path, description FROM products WHERE image_path LIKE 'images/dji_product/%' OR name LIKE 'DJI%' OR name LIKE '%drone%' ORDER BY name ASC");
+$stmt->execute();
+$rows = $stmt->fetchAll();
+
+$products = array_map(function ($r) use ($detectBrand) {
+    $brand = $detectBrand($r['name'] ?? '', $r['image_path'] ?? '');
+    return [
+        'id' => $r['id'],
+        'name' => $r['name'],
+        'price' => $r['price'],
+        'currency' => $r['currency'] ?? 'RM',
+        'image' => $r['image_path'] ?: '/images/placeholder.png',
+        'description' => $r['description'] ?? '',
+        'brand' => $brand,
+    ];
+}, $rows);
 ?>
 
 <style>
@@ -115,17 +143,28 @@ $products = [
 
 <div class="products-grid">
     <?php foreach ($products as $product): ?>
-        <div class="product-card" data-brand="<?= $product['brand'] ?>" data-price="<?= $product['price'] ?>">
+        <div class="product-card" data-brand="<?= $product['brand'] ?>" data-price="<?= $product['price'] ?>" data-product-id="<?= $product['id'] ?>">
             <img src="<?= $product['image'] ?>" alt="<?= htmlspecialchars($product['name']) ?>">
             <div class="product-info">
                 <div class="product-name"><?= htmlspecialchars($product['name']) ?></div>
-                <div class="product-price">RM<?= number_format($product['price'], 2) ?></div>
-                <button type="button" class="add-to-cart" 
-                        data-name="<?= htmlspecialchars($product['name']) ?>" 
-                        data-price="<?= $product['price'] ?>" 
-                        data-image="<?= $product['image'] ?>">
-                    Add to cart
-                </button>
+                <div class="product-subtitle"><?= htmlspecialchars($product['description']) ?></div>
+                <div class="product-price">RM <?= number_format((float)$product['price'], 2) ?></div>
+                <div class="product-footer">
+                    <button type="button" class="add-to-cart buy-btn"
+                            data-id="<?= $product['id'] ?>"
+                            data-name="<?= htmlspecialchars($product['name']) ?>"
+                            data-price="<?= $product['price'] ?>"
+                            data-image="<?= $product['image'] ?>">
+                        Add to cart
+                    </button>
+                    <button type="button" class="buy-now buy-btn"
+                            data-id="<?= $product['id'] ?>"
+                            data-name="<?= htmlspecialchars($product['name']) ?>"
+                            data-price="<?= $product['price'] ?>"
+                            data-image="<?= $product['image'] ?>">
+                        Buy now
+                    </button>
+                </div>
             </div>
         </div>
     <?php endforeach; ?>

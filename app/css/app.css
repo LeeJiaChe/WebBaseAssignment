@@ -131,6 +131,23 @@ header.main-header.scrolled .logo-img {
   filter: none;
 }
 
+/* Product page: force white header like scrolled state */
+body.product-static-header header.main-header {
+  background: #ffffff;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  color: #000;
+}
+body.product-static-header header.main-header nav a {
+  color: #000 !important;
+}
+body.product-static-header header.main-header .icon-button,
+body.product-static-header header.main-header .cart-button {
+  color: #222 !important;
+}
+body.product-static-header header.main-header .logo-img {
+  filter: none;
+}
+
 /* Per-page brand header (Canon style) */
 body.brand-header-page header.main-header {
   background: linear-gradient(135deg, #333333 0%, #8c8c8c 100%);
@@ -1047,12 +1064,25 @@ select.form-input:invalid {
   background: #1666c1;
 }
 
+/* Transparent button variant for minimal style */
+.btn-transparent {
+  background: transparent;
+  color: #1a73e8;
+  border: 1px solid #1a73e8;
+  display: inline-block;
+  width: auto;
+  text-decoration: none;
+}
+.btn-transparent:hover {
+  background: rgba(26, 115, 232, 0.08);
+}
+
 /* Products grid */
 
 .products-grid {
   display: grid;
 
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
 
   gap: 18px;
 
@@ -1137,11 +1167,22 @@ select.form-input:invalid {
   font-size: 0.95rem;
 }
 
+/* centered price under subtitle */
+.product-price {
+  text-align: center;
+  color: #6e6e6e;
+  font-weight: 800;
+  font-size: 1.15rem;
+  line-height: 1.4;
+  margin-top: 8px;
+}
+
 /* footer controls inside card */
 .product-footer {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 8px;
+  justify-content: center;
   padding-top: 14px;
 }
 .learn-link {
@@ -1156,9 +1197,13 @@ select.form-input:invalid {
   border-radius: 999px;
   text-decoration: none;
   font-weight: 700;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s ease;
 }
 .buy-btn:hover {
   background: #000;
+  transform: scale(1.05);
 }
 
 @media (max-width: 880px) {
@@ -1171,21 +1216,23 @@ select.form-input:invalid {
 }
 
 .add-to-cart {
-  background: #ff6f00;
+  background: #222;
 
   border: none;
 
   color: #fff;
 
-  padding: 8px 10px;
+  padding: 10px 18px;
 
-  border-radius: 6px;
+  border-radius: 999px;
 
   cursor: pointer;
+
+  font-weight: 700;
 }
 
 .add-to-cart:hover {
-  background: #e65a00;
+  background: #000;
 }
 
 .add-to-cart[disabled],

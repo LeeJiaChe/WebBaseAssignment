@@ -20,55 +20,40 @@ require '_base.php';
 
 
 
-// 2. 加载用户数据 (JSON 模式)
+// 2. 从数据库加载用户数据（取代 JSON）
+$user = null;
+$userId = $_SESSION['user_id'] ?? null;
 
-$usersFile = __DIR__ . '/users.json';
-
-$users = [];
-
-if (file_exists($usersFile)) {
-
-    $raw = file_get_contents($usersFile);
-
-    $users = json_decode($raw, true) ?: [];
-
-}
-
-
-
-// 3. 查找当前用户索引
-
-$curIndex = null;
-
-foreach ($users as $i => $u) {
-
-    if (isset($u['email']) && strcasecmp($u['email'], $_SESSION['user_email']) === 0) {
-
-        $curIndex = $i;
-
-        break;
-
+try {
+    if ($userId) {
+        $stmt = $db->prepare('SELECT * FROM users WHERE id = ? LIMIT 1');
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+    } else {
+        $stmt = $db->prepare('SELECT * FROM users WHERE email = ? LIMIT 1');
+        $stmt->execute([$_SESSION['user_email']]);
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
     }
-
+} catch (Exception $e) {
+    $user = null;
 }
 
-
-
-if ($curIndex === null) {
-
+if (!$user) {
     session_unset();
-
     session_destroy();
-
     header('Location: /login.php');
-
     exit;
-
 }
 
+$_SESSION['user_id'] = $user['id'];
+$_SESSION['user_email'] = $user['email'];
+$_SESSION['user_name'] = $user['name'];
+if (!empty($user['photo'])) {
+    $_SESSION['user_photo'] = $user['photo'];
+}
 
-
-$user = $users[$curIndex];
+$messages = [];
+$errors = [];
 
 $messages = [];
 
@@ -109,47 +94,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
         if (strcasecmp($email, $user['email']) !== 0) {
-
-            foreach ($users as $i => $u) {
-
-                if ($i !== $curIndex && isset($u['email']) && strcasecmp($u['email'], $email) === 0) {
-
-                    $errors[] = 'Another account already uses that email.';
-
-                    break;
-
-                }
-
+            $stmt = $db->prepare('SELECT id FROM users WHERE email = ? AND id <> ? LIMIT 1');
+            $stmt->execute([$email, $user['id']]);
+            if ($stmt->fetch()) {
+                $errors[] = 'Another account already uses that email.';
             }
-
         }
 
-
-
         if (empty($errors)) {
-
-            $users[$curIndex]['name'] = $name;
-
-            $users[$curIndex]['email'] = $email;
-
-
-
-            if (file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT))) {
-
-                $_SESSION['user_email'] = $email;
-
-                $_SESSION['user_name'] = $name;
-
-                $user = $users[$curIndex];
-
-                $messages[] = 'Profile updated successfully.';
-
-            } else {
-
-                $errors[] = 'Failed to save changes.';
-
-            }
-
+            $stmt = $db->prepare('UPDATE users SET name = ?, email = ? WHERE id = ?');
+            $stmt->execute([$name, $email, $user['id']]);
+            $_SESSION['user_email'] = $email;
+            $_SESSION['user_name'] = $name;
+            $user['name'] = $name;
+            $user['email'] = $email;
+            $messages[] = 'Profile updated successfully.';
         }
 
 
@@ -167,33 +126,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
         if (!password_verify($current, $user['password_hash'])) {
-
             $errors[] = 'Current password is incorrect.';
-
         }
 
         if (strlen($new) < 6) {
-
             $errors[] = 'New password must be at least 6 characters.';
-
         }
 
         if ($new !== $new2) {
-
             $errors[] = 'New passwords do not match.';
-
         }
 
-
-
         if (empty($errors)) {
-
-            $users[$curIndex]['password_hash'] = password_hash($new, PASSWORD_DEFAULT);
-
-            file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT));
-
+            $newHash = password_hash($new, PASSWORD_DEFAULT);
+            $stmt = $db->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
+            $stmt->execute([$newHash, $user['id']]);
+            $user['password_hash'] = $newHash;
             $messages[] = 'Password changed successfully.';
-
         }
 
 
@@ -249,27 +198,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 
                 if (move_uploaded_file($f['tmp_name'], $fullpath)) {
-
                     if (!empty($user['photo']) && file_exists(__DIR__ . '/' . $user['photo'])) {
-
                         @unlink(__DIR__ . '/' . $user['photo']);
-
                     }
-
-                    $users[$curIndex]['photo'] = $filename;
-
-                    file_put_contents($usersFile, json_encode($users, JSON_PRETTY_PRINT));
-
+                    $stmt = $db->prepare('UPDATE users SET photo = ? WHERE id = ?');
+                    $stmt->execute([$filename, $user['id']]);
                     $_SESSION['user_photo'] = $filename;
-
-                    $user = $users[$curIndex];
-
+                    $user['photo'] = $filename;
                     $messages[] = 'Profile photo uploaded.';
-
                 } else {
-
                     $errors[] = 'Failed to save uploaded file.';
-
                 }
 
             }

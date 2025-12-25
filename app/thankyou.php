@@ -2,7 +2,7 @@
 
 require '_base.php';
 
-session_start();
+// session_start(); // Already called in _base.php
 
 $_title = 'Thank You';
 
@@ -702,9 +702,11 @@ body.transparent-header-page main, main {
 
 .btn-primary:hover {
 
+    background: linear-gradient(135deg, #d97700 0%, #c86400 100%);
+
     transform: translateY(-2px);
 
-    box-shadow: 0 6px 20px rgba(255, 111, 0, 0.4);
+    box-shadow: 0 6px 20px rgba(200, 100, 0, 0.4);
 
 }
 
@@ -1198,21 +1200,13 @@ $(function(){
 
         
 
-        <div class="action-buttons">
+        <div class="action-buttons" style="justify-content: center;">
 
             <a href="index.php" class="btn btn-primary">
 
                 <i class="fas fa-home"></i>
 
                 Back to Main Menu
-
-            </a>
-
-            <a href="products.php" class="btn btn-secondary">
-
-                <i class="fas fa-shopping-bag"></i>
-
-                Continue Shopping
 
             </a>
 
@@ -1229,21 +1223,21 @@ $(function(){
     // Helper functions
 
     function getPaymentMethodLabel(method) {
-
+        const key = (method || '').toString().trim().toLowerCase();
+        if (!key) return 'Unknown payment method';
         const labels = {
-
             'card': 'Credit/Debit Card',
-
+            'credit_card': 'Credit/Debit Card',
+            'debit_card': 'Credit/Debit Card',
             'fpx': 'FPX Online Banking',
-
-            'ewallet': 'E-Wallet',
-
-            'cod': 'Cash on Delivery'
-
+            'ewallet': 'E-Wallet (GrabPay, Touch n Go)',
+            'e-wallet': 'E-Wallet (GrabPay, Touch n Go)',
+            'bank_transfer': 'Bank Transfer',
+            'cash': 'Cash on Delivery',
+            'cod': 'Cash on Delivery',
+            'paypal': 'PayPal'
         };
-
-        return labels[method] || method || 'N/A';
-
+        return labels[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     }
 
     

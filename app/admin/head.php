@@ -3,7 +3,10 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     @session_start();
 }
 // load DB for user image lookup
-require_once __DIR__ . '/../lib/db.php';
+global $db;
+if (!isset($db)) {
+    $db = require_once __DIR__ . '/../lib/db.php';
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -15,7 +18,7 @@ require_once __DIR__ . '/../lib/db.php';
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <?= '<link rel="stylesheet" href="../css/app.css">' ?>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
-    <script src="js/app.js"></script>
+    <script src="../js/app.js"></script>
 <style>
     header.main-header {
         background: black;
@@ -34,35 +37,41 @@ require_once __DIR__ . '/../lib/db.php';
             <div class="dropdown">
                 <a href="javascript:void(0)" class="dropdown-toggle">Brands <span class="arrow">&#9662;</span></a>
                 <div class="dropdown-menu">
-                    <a href="canon.php">Canon</a>
-                    <a href="fujifilm.php">FUJIFILM</a>
-                    <a href="dji.php">DJI</a>
-                    <a href="sony.php">Sony</a>
-                    <a href="insta360.php">Insta360</a>
+                    <a href="../canon.php">Canon</a>
+                    <a href="../fujifilm.php">FUJIFILM</a>
+                    <a href="../dji.php">DJI</a>
+                    <a href="../sony.php">Sony</a>
+                    <a href="../insta360.php">Insta360</a>
                 </div>
             </div>
 
             <div class="dropdown">
                 <a href="javascript:void(0)" class="dropdown-toggle">Categories <span class="arrow">&#9662;</span></a>
                 <div class="dropdown-menu">
-                    <a href="mirrorless.php">Mirrorless Cameras</a>
-                    <a href="dslr.php">DSLR Cameras</a>
-                    <a href="action.php">Action Cameras</a>
-                    <a href="drone.php">Drones</a>
-                    <a href="accessories.php">Camera Accessories</a>
+                    <a href="../mirrorless.php">Mirrorless Cameras</a>
+                    <a href="../dslr.php">DSLR Cameras</a>
+                    <a href="../action.php">Action Cameras</a>
+                    <a href="../drone.php">Drones</a>
+                    <a href="../accessories.php">Camera Accessories</a>
                 </div>
             </div>
 
-            <a href="contact.php">Contact</a>
+            <a href="../contact.php">Contact</a>
 
             <?php if (!empty($_SESSION['user_role']) && $_SESSION['user_role'] === 'admin'): ?>
-                <!-- quick admin links -->
-                <a href="/admin/products.php" style="margin-left:12px; font-weight:700; color:#2b7cff;">Admin Dashboard</a>
-                <a href="/index.php" style="margin-left:8px; color:#6b7280;">View site (User)</a>
+                <!-- admin links -->
+                <div class="dropdown" style="margin-left:12px;">
+                    <a href="javascript:void(0)" class="dropdown-toggle" style="font-weight:700; color:#2b7cff;">Admin Dashboard <span class="arrow">&#9662;</span></a>
+                    <div class="dropdown-menu">
+                        <a href="/admin/products.php">Products</a>
+                        <a href="/admin/members.php">Members</a>
+                        <a href="/admin/orders.php">Orders</a>
+                    </div>
+                </div>
             <?php endif; ?>
         </nav>
 
-        <a href="cart.php" class="cart-button" title="Cart">
+        <a href="#" class="cart-button" title="Cart">
             <i class="fas fa-shopping-cart" style="font-size:20px"></i>
             <span id="cartCount" class="hidden">0</span>
         </a>
@@ -72,9 +81,9 @@ require_once __DIR__ . '/../lib/db.php';
 if ($isLoggedIn) {
     $photo = '';
     // try SQL first
-    if (isset($pdo) && !empty($_SESSION['user_email'])) {
+    if (isset($db) && !empty($_SESSION['user_email'])) {
         try {
-            $stmt = $pdo->prepare('SELECT photo FROM users WHERE email = :email LIMIT 1');
+            $stmt = $db->prepare('SELECT photo FROM users WHERE email = :email LIMIT 1');
             $stmt->execute([':email' => $_SESSION['user_email']]);
             $row = $stmt->fetch(PDO::FETCH_ASSOC);
             if ($row && !empty($row['photo'])) {
@@ -118,7 +127,7 @@ if ($isLoggedIn) {
                 </button>
                 <div class="icon-dropdown-menu" id="userIconMenu">
                     <a href="../profile.php">Profile</a>
-                    <a href="user.php?action=logout">Log out</a>
+                    <a href="../user.php?action=logout">Log out</a>
                 </div>
             </div>
         <?php } else { ?>
@@ -128,8 +137,8 @@ if ($isLoggedIn) {
                 </button>
                 <?= htmlspecialchars($_SESSION['user_name'] ?? '') ?>
                 <div class="icon-dropdown-menu" id="userIconMenu">
-                    <a href="login.php">Log in</a>
-                    <a href="signUp.php">Sign up</a>
+                    <a href="../login.php">Log in</a>
+                    <a href="../signUp.php">Sign up</a>
                 </div>
             </div>
         <?php } ?>

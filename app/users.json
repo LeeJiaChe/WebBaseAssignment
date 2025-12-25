@@ -24,9 +24,10 @@
         "email": "jiache0331@gmail.com",
         "password_hash": "$2y$10$ed5o2Jjno2nfPEUCMpOnAu.WZRoZkYJebFYW2sPNR8qm8QTZnhVM.",
         "created": 1763990954,
-        "reset_token": "76afc48a3385328269724b4485928e47",
+        "reset_token": "a387634fb8c7d4b98d80a9bf4035e8577f09631280a7113942bb42f1484fd49d",
         "reset_expires": 1765593890,
-        "photo": "images\/users\/jiache0331_gmail.com_1765593038.jpg"
+        "photo": "images\/users\/jiache0331_gmail.com_1765593038.jpg",
+        "reset_expiry": 1766672123
     },
     {
         "id": "user_693d88dd3d7d0",
